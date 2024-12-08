@@ -48,6 +48,8 @@ async def main():
         BotCommand(command="tarot", description="Получить карту Таро с предсказанием"),
         BotCommand(command="wander_ball", description="Получить ответ от шара судьбы"),
         BotCommand(command="chill_student", description="Какой ты сегодня студент"),
+        BotCommand(command="joke", description="Расскажу анекдот"),
+        BotCommand(command="joke_black", description="Расскажу анекдот, но также может быть черный юмор"),
 
         BotCommand(command="add_deadline", description="Добавить дедлайн"),
         BotCommand(command="view_deadlines", description="Посмотреть предстоящие дедлайны"),

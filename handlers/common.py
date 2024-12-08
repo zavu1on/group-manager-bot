@@ -1,4 +1,6 @@
 import aiohttp
+import json
+import os
 
 from random import choice
 from aiogram import types, Router
@@ -8,6 +10,16 @@ from aiogram.fsm.context import FSMContext
 from filters.chat import is_private_chat, is_group_chat
 from utils.localize import translate
 from assets.text import *
+
+path = os.path.join(os.getcwd(), "assets/jokes-en.json")
+jokes_all = []
+jokes_safe = []
+with open(path, "r", encoding="utf-8") as file:
+    data = json.load(file)
+    for joke in data["jokes"]:
+        if joke['safe']:
+            jokes_safe.append(joke)
+        jokes_all.append(joke)
 
 common_router = Router()
 
@@ -66,3 +78,48 @@ async def send_student_status(message: types.Message, state: FSMContext):
 async def send_help_text(message: types.Message, state: FSMContext):
     await message.reply(HELP_TEXT)
     await state.clear()
+
+
+
+async def send_joke_handler(message: types.Message, state: FSMContext, is_black: bool):
+    await state.clear()
+
+    new_message = await message.reply(JOKE_PENDING)
+    joke = choice(jokes_all if is_black else jokes_safe)
+    is_black = not joke['safe']
+    intro = JOKE_SUCCESS_BAD if is_black else JOKE_SUCCESS
+
+    try:
+        category = translate(joke['category'])
+        text = f"Категория: {category}\n"
+
+        if joke["type"] == "single":
+            joke = translate(joke["joke"])
+            if is_black:
+                text += f"<span class='tg-spoiler'><i>{joke}</i></span>"
+            else:
+                text += f"<i>{joke}</i>"
+        elif joke["type"] == "twopart":
+            setup = translate(joke["setup"])
+            delivery = translate(joke["delivery"])
+
+            if is_black:
+                text += f"<span class='tg-spoiler'>- <i>{setup}</i>\n- <i>{delivery}</i></span>"
+            else:
+                text += f"- <i>{setup}</i>\n- <i>{delivery}</i>"
+
+        await new_message.edit_text(intro + '\n\n' + text, parse_mode="html")
+
+    except Exception as error:
+        await new_message.edit_text(JOKE_FAIL)
+
+
+@common_router.message(Command("joke"))
+async def send_joke(message: types.Message, state: FSMContext):
+    await send_joke_handler(message, state, False)
+
+
+@common_router.message(Command("joke_black"))
+async def send_joke_black(message: types.Message, state: FSMContext):
+    await send_joke_handler(message, state, True)
+
