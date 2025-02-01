@@ -80,7 +80,6 @@ async def send_help_text(message: types.Message, state: FSMContext):
     await state.clear()
 
 
-
 async def send_joke_handler(message: types.Message, state: FSMContext, is_black: bool):
     await state.clear()
 
